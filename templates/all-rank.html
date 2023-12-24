@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="icon" href="../static/img/nba.png" type="image/x-icon">
+    <title>综合能力</title>
+    <!-- 引入 echarts.js -->
+    <script src="static/js/echarts-gl.min.js"></script>
+    <script src="static/js/jquery.min.js"></script>
+</head>
+
+<body>
+    <br />
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="chart1" style="width: 800px;height:450px;"></div>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // 基于准备好的dom，初始化echarts实例
+            var myChart1 = echarts.init(document.getElementById('chart1'), 'light');
+
+
+            // var dataAxis = d[1].map(v => v['season'] + ' ' + v['team_abbreviation']);
+            // var data = d[1].map(v => v['pts']);
+
+            var option = {
+                title: {
+                    text: 'NBA球员综合能力排行',
+                },
+                tooltip: {
+                trigger: 'axis',
+                    axisPointer: {
+                        // Use axis to trigger tooltip
+                        type: 'shadow' // 'shadow' as default; can also be 'line' or 'shadow'
+                    }
+                },
+                legend: {},
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value'
+                },
+                yAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                series: [
+                {
+                    type: 'bar',
+                    stack: 'total',
+                    label: {
+                        show: true
+                    },
+                    emphasis: {
+                    focus: 'series'
+                    },
+                    data: [820, 832, 901, 934, 1290, 1330, 1320]
+                }
+                ]
+            };
+
+            // 使用刚指定的配置项和数据显示图表。
+            myChart1.setOption(option);
+        })
+        // $.getJSON("/getRank", d => {
+
+        // })
+    </script>
+</body>
+
+</html>

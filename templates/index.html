@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" href="../static/img/nba.png" type="image/x-icon">
+    <title>NBA STAT</title>
+    <!-- 引入 echarts.js -->
+    <script src="static/js/echarts-gl.min.js"></script>
+    <script src="static/js/jquery.min.js"></script>
+</head>
+<body>
+    <h1>基于Spark的NBA球员数据分析</h1>
+    <input type="text" id="player-input" placeholder="输入球员的英文名查找"/>
+    <button id="search-btn">搜索</button>
+    <h3 id="cur-player"></h3>
+    <table id="myTable" style="border-spacing: 10px; text-align: center;">
+        <thead>
+            <tr id="headerRow">
+                <!-- 表头将通过jQuery动态生成 -->
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 表格数据将通过jQuery动态填充 -->
+        </tbody>
+    </table>
+
+    <ul style="line-height: 2em; display: flex;">
+        <!-- <li><a href="genre.html">各类型专辑的数量统计图</a></li> -->
+        <li style="margin-right: 40px;"><a href="all-score.html" target="_blank">生涯数据统计图</a></li>
+        <li style="margin-right: 40px;"><a href="all-rank.html" target="_blank">球员综合能力排行</a></li>
+        <li style="margin-right: 40px;"><a href="all-score.html" target="_blank">相似球员分析</a></li>
+        <!-- <li><a href="year-tracks-and-sales.html">近20年每年发行的专辑数量和单曲数量统计图</a></li>
+        <li><a href="genre-year-sales.html">总销量前五的专辑类型的各年份销量分析图</a></li>
+        <li><a href="genre-critic.html">总销量前五的专辑类型的评分分析图</a></li> -->
+    </ul>
+</body>
+
+<script>
+$(document).ready(function() {
+    // 初始化
+    var curPlayer = $("#cur-player");
+    $.getJSON('/getCurPlayer',d=>{
+        if(d[1].length !== 0) {
+            curPlayer.text('当前展示球员：' + d[0])
+            renderTable(d[1]);
+        }
+    });
+    // 当点击提交按钮时
+    $('#search-btn').click(handleSearch);
+    $('#player-input').keydown(function(event) {
+        if (event.keyCode === 13) { // 13表示回车键的键码
+            event.preventDefault(); // 阻止默认行为（防止表单提交或页面刷新）
+            // 在这里执行你的触发事件的代码
+            console.log('回车键被按下');
+            handleSearch();
+        }
+        })
+});
+
+function handleSearch() {
+    // 获取输入框的值
+    var inputValue = $('#player-input').val().trim();
+    var curPlayer = $("#cur-player");
+    // 发送请求
+    $.ajax({
+      url: '/getPlayer',
+      method: 'POST',
+      data: { inputValue: inputValue },
+      success: function(response) {
+        // 请求成功的处理逻辑
+        console.log(response);
+        if(response.length !== 0) {
+            curPlayer.text('当前展示球员：' + inputValue)
+            renderTable(response);
+        } else {
+            alert("请输入正确的球员姓名！")
+        }
+      },
+      error: function(xhr, status, error) {
+        // 请求失败的处理逻辑
+        console.error(error);
+      }
+    });
+  }
+
+function renderTable(json_data) {
+    // 模拟从服务器获取的数据
+    var data = json_data
+
+    // 生成表头
+    var headerRow = $('#headerRow');
+    // 清空表头
+    headerRow.empty();
+
+    $.each(data[0], function(key, value) {
+        headerRow.append($('<th>').text(translation_map[key]));
+    });
+
+    // 填充数据
+    var tableBody = $('#myTable tbody');
+    // 清空表内容
+    tableBody.empty();
+    $.each(data, function(index, item) {
+        var row = $('<tr>');
+        $.each(item, function(key, value) {
+            if((value.split('.')[1] || '').length > 3) {
+                row.append($('<td>').text(Number(value).toFixed(3)));
+            } else {
+                row.append($('<td>').text(value));
+            }
+        });
+        tableBody.append(row);
+    });
+}
+
+
+// 字段翻译映射
+var translation_map = {
+    "_c0": "序号",
+    "age": "年龄",
+    "ast": "助攻",
+    "ast_pct": "助攻百分比",
+    "college": "大学",
+    "country": "国家",
+    "draft_number": "选秀顺位",
+    "draft_round": "选秀轮次",
+    "draft_year": "选秀年份",
+    "dreb_pct": "防守篮板百分比",
+    "gp": "比赛场次",
+    "net_rating": "净效率",
+    "oreb_pct": "进攻篮板百分比",
+    "player_height": "球员身高",
+    "player_name": "球员姓名",
+    "player_weight": "球员体重",
+    "pts": "得分",
+    "reb": "篮板",
+    "season": "赛季",
+    "team_abbreviation": "球队缩写",
+    "ts_pct": "真实命中率",
+    "usg_pct": "持球率"
+}
+</script>
+</html>
