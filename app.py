@@ -33,11 +33,37 @@ def getPlayer():
     print(mySpark.playername)
     return res
 
-# 搜索球员
+# 获取当前展示球员
 @app.route('/getCurPlayer', methods=['GET'])
 def getCurPlayer():
     # 返回json数据
     return [mySpark.playername, mySpark.playerdata]
+
+# 获取球员排行
+@app.route('/getRank', methods=['GET'])
+def getRank():
+    # 返回json数据
+    rank = mySpark.getRank()
+    return rank
+
+# 获取相似球员
+@app.route('/getRelate', methods=['POST'])
+def getRelate():
+    # 从请求中获取输入参数
+    input_value = request.form.get('inputValue')
+    
+    # 在控制台打印输入参数
+    print(input_value)
+
+    relate = mySpark.getRelate(input_value)
+    return relate
+
+# 随机抽取球员
+@app.route('/getRandom', methods=['GET'])
+def getRandom():
+    # 返回json数据
+    player = mySpark.getRandom()
+    return json.dumps(player)
 
 if __name__ == '__main__':   
     app.DEBUG=True#代码调试立即生效

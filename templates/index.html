@@ -12,6 +12,10 @@
 </head>
 <body>
     <h1>基于Spark的NBA球员数据分析</h1>
+    <div style="margin: 10px 0;">
+        <button id="generate-btn">点击随机抽取球员</button>
+        <span id="generate-name"></span>
+    </div>
     <input type="text" id="player-input" placeholder="输入球员的英文名查找"/>
     <button id="search-btn">搜索</button>
     <h3 id="cur-player"></h3>
@@ -30,7 +34,7 @@
         <!-- <li><a href="genre.html">各类型专辑的数量统计图</a></li> -->
         <li style="margin-right: 40px;"><a href="all-score.html" target="_blank">生涯数据统计图</a></li>
         <li style="margin-right: 40px;"><a href="all-rank.html" target="_blank">球员综合能力排行</a></li>
-        <li style="margin-right: 40px;"><a href="all-score.html" target="_blank">相似球员分析</a></li>
+        <li style="margin-right: 40px;"><a href="all-compare.html" target="_blank">球员对比分析</a></li>
         <!-- <li><a href="year-tracks-and-sales.html">近20年每年发行的专辑数量和单曲数量统计图</a></li>
         <li><a href="genre-year-sales.html">总销量前五的专辑类型的各年份销量分析图</a></li>
         <li><a href="genre-critic.html">总销量前五的专辑类型的评分分析图</a></li> -->
@@ -56,7 +60,8 @@ $(document).ready(function() {
             console.log('回车键被按下');
             handleSearch();
         }
-        })
+    });
+    $('#generate-btn').click(handleGenerate)
 });
 
 function handleSearch() {
@@ -83,7 +88,7 @@ function handleSearch() {
         console.error(error);
       }
     });
-  }
+}
 
 function renderTable(json_data) {
     // 模拟从服务器获取的数据
@@ -113,6 +118,13 @@ function renderTable(json_data) {
         });
         tableBody.append(row);
     });
+}
+
+function handleGenerate() {
+    $.getJSON('/getRandom', d => {
+        console.log(d)
+        $('#generate-name').text(`球员英文名：${d}`)
+    })
 }
 
 

@@ -1,3 +1,61 @@
+# 球员综合能力评价
+使用全部球员数据进行灰色关联度分析（Grey Relation Analysis，GRA），即可得到不同的篮球指标对于综合评价的相关性系数。再利用这一相关性系数对球员数据进行TOPSIS （Technique for Order Preference by Similarity to an Ideal Solution，逼近理想解排序方法），计算各个球员的综合评价分数。输入球员各项数据后即可得到球员的综合评分，从大到小进行球员排名。
+
+##灰色关联度分析
+灰色关联度分析（Grey Relation Analysis）可以在一个灰色系统中，衡量某个项目受其他的因素影响的相对强弱。两个系统之间的因素，随时间或不同对象而变化的关联性大小的量度，称为关联度。两个因素变化即同步变化程度较高，即可谓二者关联程度较高；反之，则较低。因此，灰色关联分析方法，根据因素之间发展趋势的相似相异程度，为衡量因素间关联程度提供了量化的度量。灰色关联分析的基本思想是根据序列曲线几何形状的相似程度来判断其联系是否紧密。曲线越接近，相应序列之间的关联度就越大，反之就越小。
+![](./img/GRA.png)
+
+```python
+def grey_relation_analysis(data_normalized):
+    max_arr = [max(row) for row in data_normalized]
+    max_arr_column = [[x] for x in max_arr]
+    results = [[abs(x - max_arr_column[i][0]) for x in row] for i, row in enumerate(data_normalized)]
+
+    max_value = max(max(results))
+    min_value = min(min(results))
+    alpha = [0.9, 0.43, 0.015, 0.075, 0.015, 0.05, 0.2, 0.1, 0.075]
+    roi = 0.48
+    results = [
+        [
+            1 / (x + roi * max_value) * (min_value + roi * max_value) * alpha[j]
+            for j, x in enumerate(row)
+        ]
+        for row in results
+    ]
+    r = [sum(x) for x in zip(*results)]
+    r = [x / sum(r) for x in r]
+    return r
+```
+##TOPSIS 
+TOPSIS （Technique for Order Preference by Similarity to an Ideal Solution ）模型中文叫做“逼近理想解排序方法”，是根据评价对象与理想化目标的接近程度进行排序的方法，是一种距离综合评价方法。基本思路是通过假定正、负理想解，测算各样本与正、负理想解的距离，得到其与理想方案的相对贴近度（即距离正理想解越近同时距离负理想解越远），进行各评价对象的优劣排序。具体步骤及概念如下：
+
+- step 1： 指标同向化、标准化并得到权重。这部分与熵权法结合，通过熵权法得到权重，避免主观因素影响，得到权重向量W及标准化矩阵P。具体内容可参照综合评价之熵权法，这里不再赘述。
+
+- step 2 ： 得到加权后的规范化矩阵Z。Z由P与W相乘后得到。
+
+- step 3 ： 确定正、负理想解。正理想解指各指标都达到样本中最好的值，负理想解指各指标都为样本中最差的值。
+
+- step 4 ： 计算各样本距离正、负理想解的距离。
+
+![](./img/TOPSIS.png)
+    
+```python
+def topsis(data_normalized, r):
+    max_elements = [max(row) for row in zip(*data_normalized)]
+    min_elements = [min(row) for row in zip(*data_normalized)]
+
+    max_result = [[(x - max_elements[j]) ** 2 for j, x in enumerate(row)] for row in data_normalized]
+    min_result = [[(x - min_elements[j]) ** 2 for j, x in enumerate(row)] for row in data_normalized]
+
+    score1 = [sum(x * r[j] for j, x in enumerate(row)) for row in max_result]
+    score2 = [sum(x * r[j] for j, x in enumerate(row)) for row in min_result]
+
+    score = [score2[i] ** 0.5 / (score1[i] ** 0.5 + score2[i] ** 0.5) for 
+    return score
+
+```
+
+
 # 球员对比分析
 使用全部球员数据建立KMeans聚类模型，输入球员后使用聚类模型查找其对应聚类并给出类似球员中所属聚类中能力值最高的x名球员（目前返回全部同聚类的球员，后面再改）
 ## 预处理

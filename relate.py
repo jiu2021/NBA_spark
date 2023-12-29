@@ -1,6 +1,6 @@
 import json
 import tqdm
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from pyspark.ml.feature import VectorAssembler, StandardScaler, PCA
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
@@ -8,19 +8,18 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import avg, collect_list
 
 
-class Model:
-    def __init__(self, path: str) -> None:
-        spark = SparkSession.builder.getOrCreate()
+class Relate:
+    def __init__(self, df) -> None:
+        # spark = SparkSession.builder.getOrCreate()
         # Load data
-        df = spark.read.csv(path, header = True)
-        df = self.preprocess(df)
+        self.df = self.preprocess(df)
         # PCA
-        self.determine_pca(df)
-        df = self.pca.transform(df)
+        self.determine_pca()
+        self.df = self.pca.transform(self.df)
         # Train model
         # self.determine_cluster(df)
-        self.model = KMeans(featuresCol='pca_features', k=10).fit(df)
-        results = self.model.transform(df).select(['player_name', 'prediction'])
+        self.model = KMeans(featuresCol='pca_features', k=10).fit(self.df)
+        results = self.model.transform(self.df).select(['player_name', 'prediction'])
         results = results.groupBy('prediction').agg(collect_list('player_name').alias('player_name'))
         self.prediction_dict = results.rdd.collectAsMap()
         with open("./clusters.json", "w") as fp:
@@ -52,23 +51,23 @@ class Model:
         df = scale.transform(df)
         return df
 
-    def determine_pca(self, df):
+    def determine_pca(self):
         pca = PCA(k=11, inputCol='standardized', outputCol='pca_features')
-        pca = pca.fit(df)
+        pca = pca.fit(self.df)
         var_ratio = pca.explainedVariance.toArray()
         cum_var_ratio = [sum(var_ratio[:i+1]) for i in range(11)]
-        fig, ax = plt.subplots(1,1)
-        ax.plot(range(1, 12), cum_var_ratio)
-        ax.set_xlabel('k')
-        ax.set_ylabel('Cumulative Variance Ratio')
-        fig.savefig("./img/pca.png")
+        # fig, ax = plt.subplots(1,1)
+        # ax.plot(range(1, 12), cum_var_ratio)
+        # ax.set_xlabel('k')
+        # ax.set_ylabel('Cumulative Variance Ratio')
+        # fig.savefig("./img/pca.png")
         k = min(i + 1 for i in range(11) if cum_var_ratio[i] > 0.9)
         print(f"Chosen k_pca = {k}")
         pca = PCA(k=k, inputCol='standardized', outputCol='pca_features')
-        self.pca = pca.fit(df)
+        self.pca = pca.fit(self.df)
 
-    def determine_cluster(self, df):
-        df = self.preprocess(df)
+    def determine_cluster(self):
+        df = self.preprocess(self.df)
         df = self.pca.transform(df)
         scores = []
         evaluator = ClusteringEvaluator(featuresCol='standardized')
@@ -85,10 +84,3 @@ class Model:
         ax.set_ylabel('cost')
         fig.savefig("./img/kmeans.png")
 
-
-if __name__ == "__main__":
-    model = Model("nba_all_seasons.csv")
-    spark = SparkSession.builder.getOrCreate()
-    # Load data
-    df = spark.read.csv("nba_all_seasons.csv", header = True)
-    print(model(df.limit(2)))
