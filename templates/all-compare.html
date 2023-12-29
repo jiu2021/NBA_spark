@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="icon" href="../static/img/nba.png" type="image/x-icon">
+    <title>球员对比</title>
+    <!-- 引入 echarts.js -->
+    <script src="static/js/echarts-gl.min.js"></script>
+    <script src="static/js/jquery.min.js"></script>
+</head>
+
+<body>
+    <div style="display: flex;"> 
+        <div style="margin-right: 20px;">
+            <span>球员1：</span>
+            <input type="text" id="player1" placeholder="输入球员1的英文名"/>
+            <button id="search-btn1">展示</button>
+        </div>
+        <div>
+            <span>球员2：</span>
+            <input type="text" id="player2" placeholder="输入球员2的英文名"/>
+            <button id="search-btn2">展示</button>
+        </div>
+    </div>
+    <br />
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="chart1" style="width: 1500px; height:800px;"></div>
+    <div>
+        <span>查找相似球员：</span>
+        <input type="text" id="player-input" placeholder="输入球员的英文名查找"/>
+        <button id="search-btn">查找</button>
+    </div>
+    <div>
+        <span id="res1"></span>
+        <span id="res2"></span>
+    </div>
+
+    <script type="text/javascript">
+        var option = {
+            title: {
+                text: '球员生涯数据对比图'
+            },
+            legend: {
+                data: ['球员1', '球员2']
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            radar: {
+                // shape: 'circle',
+                indicator: [
+                { name: '得分', max: 35 },
+                { name: '助攻', max: 15 },
+                { name: '篮板', max: 15 },
+                { name: '命中率', min: 0.3, max: 0.8 },
+                { name: '效率', max: 10 },
+                { name: '持球率', max: 0.5 }
+                ]
+            },
+            series: [
+                {
+                // name: 'Budget vs spending',
+                type: 'radar',
+                tooltip: {
+                    trigger: 'item'
+                },
+                data: [
+                        {
+                        value: [0, 0, 0, 0.3, 0, 0],
+                        name: '球员1',
+                        label: {
+                            show: true
+                        },
+                    },
+                        {
+                        value: [0, 0, 0, 0.3, 0, 0],
+                        name: '球员2',
+                        label: {
+                            show: true
+                        },
+                        }
+                    ]
+                }
+            ]
+        };
+        var myChart1 = echarts.init(document.getElementById('chart1'), 'light');
+        $(document).ready(function() {
+            // 当点击提交按钮时
+            $('#search-btn').click(handleSearch);
+            $('#player-input').keydown(function(event) {
+                if (event.keyCode === 13) { // 13表示回车键的键码
+                    event.preventDefault(); // 阻止默认行为（防止表单提交或页面刷新）
+                    // 在这里执行你的触发事件的代码
+                    console.log('回车键被按下');
+                    handleSearch();
+                }
+            })
+            // 基于准备好的dom，初始化echarts实例
+            $('#search-btn1').click(()=>handleDisplay(1));
+            $('#search-btn2').click(()=>handleDisplay(2));
+            $('#player1').keydown(function(event) {
+                if (event.keyCode === 13) { // 13表示回车键的键码
+                    event.preventDefault(); // 阻止默认行为（防止表单提交或页面刷新）
+                    // 在这里执行你的触发事件的代码
+                    console.log('回车键被按下');
+                    handleDisplay(1)
+                }
+            })
+            $('#player2').keydown(function(event) {
+                if (event.keyCode === 13) { // 13表示回车键的键码
+                    event.preventDefault(); // 阻止默认行为（防止表单提交或页面刷新）
+                    // 在这里执行你的触发事件的代码
+                    console.log('回车键被按下');
+                    handleDisplay(2)
+                }
+            })
+            
+            // var dataAxis = d[1].map(v => v['season'] + ' ' + v['team_abbreviation']);
+            // var data = d[1].map(v => v['pts']);
+            // 使用刚指定的配置项和数据显示图表。
+            myChart1.setOption(option);
+        })
+
+        function handleDisplay(which) {
+            var inputValue = which === 1 ?  $('#player1').val().trim() : $('#player2').val().trim()
+            $.ajax({
+                url: '/getPlayer',
+                method: 'POST',
+                data: { inputValue: inputValue },
+                success: function(response) {
+                    // 请求成功的处理逻辑
+                    console.log(response);
+                    var playerdata = {
+                        ast: 0,
+                        net_rating: 0,
+                        pts: 0,
+                        reb: 0,
+                        ts_pct: 0,
+                        usg_pct: 0
+                    }
+                    if(response.length !== 0) {
+                        for(let s of response) {
+                            playerdata.pts += Number(s.pts);
+                            playerdata.ast += Number(s.ast);
+                            playerdata.net_rating += Number(s.net_rating);
+                            playerdata.reb += Number(s.reb);
+                            playerdata.ts_pct += Number(s.ts_pct);
+                            playerdata.usg_pct += Number(s.usg_pct);
+                        }
+
+                        for(let key in playerdata) {
+                            playerdata[key] = (playerdata[key] / response.length).toFixed(3)
+                        }
+                        if(which === 1) {
+                            option.series[0].data[0].value = [playerdata.pts, playerdata.ast, playerdata.reb, playerdata.ts_pct, playerdata.net_rating, playerdata.usg_pct]
+                        } else {
+                            option.series[0].data[1].value = [playerdata.pts, playerdata.ast, playerdata.reb, playerdata.ts_pct, playerdata.net_rating, playerdata.usg_pct]
+                        }
+                        console.log(playerdata)
+                        myChart1.setOption(option);      
+                    } else {
+                        alert("请输入正确的球员姓名！")
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // 请求失败的处理逻辑
+                    console.error(error);
+                }
+            });
+        }
+
+        function handleSearch() {
+            // 获取输入框的值
+            var inputValue = $('#player-input').val().trim();
+            // var curPlayer = $("#cur-player");
+            // 发送请求
+            $("#res1").text(`与${inputValue}相似的球员有：`)
+            $("#res2").text('加载中...')
+            $.ajax({
+            url: '/getRelate',
+            method: 'POST',
+            data: { inputValue: inputValue },
+            success: function(response) {
+                // 请求成功的处理逻辑
+                console.log(response);
+                str = ''
+                for(let player of response) {
+                    str += player.player_name + '，'
+                }
+                str = str.slice(0, str.length - 1)
+                $("#res2").text(str)
+            },
+            error: function(xhr, status, error) {
+                // 请求失败的处理逻辑
+                console.error(error);
+            }
+            });
+        }
+    </script>
+</body>
+
+</html>

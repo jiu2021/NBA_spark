@@ -13,13 +13,27 @@
 <body>
     <br />
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-    <div id="chart1" style="width: 800px;height:450px;"></div>
+    <div id="chart1" style="width: 1500px;height:900px;"></div>
+    <div id="players"></div>
     <script type="text/javascript">
         $(document).ready(function() {
             // 基于准备好的dom，初始化echarts实例
             var myChart1 = echarts.init(document.getElementById('chart1'), 'light');
-
-
+            var name = [];
+            var score = [];
+            var str = ''
+            $.getJSON('/getRank', d => {
+                console.log(d)
+                var data = d.slice(0, 30)
+                for(let player of data) {
+                    name.push(player.player_name);
+                    score.push(player.score);
+                    str += player.player_name + `(${name_map[player.player_name]})` + '，'
+                }
+                str = str.slice(0, str.length - 1);
+                $('#players').text(str)
+                myChart1.setOption(option);
+            })
             // var dataAxis = d[1].map(v => v['season'] + ' ' + v['team_abbreviation']);
             // var data = d[1].map(v => v['pts']);
 
@@ -46,7 +60,8 @@
                 },
                 yAxis: {
                     type: 'category',
-                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    data: name,
+                    inverse: true, //倒序
                 },
                 series: [
                 {
@@ -58,18 +73,56 @@
                     emphasis: {
                     focus: 'series'
                     },
-                    data: [820, 832, 901, 934, 1290, 1330, 1320]
+                    data: score
                 }
                 ]
             };
 
             // 使用刚指定的配置项和数据显示图表。
-            myChart1.setOption(option);
+            // myChart1.setOption(option);
         })
-        // $.getJSON("/getRank", d => {
 
-        // })
+        var name_map = {
+            "Joel Embiid": "乔尔·恩比德",
+            "Luka Doncic": "卢卡·东契奇",
+            "LeBron James": "勒布朗·詹姆斯",
+            "Giannis Antetokounmpo": "雅尼斯·阿德托昆博",
+            "Karl-Anthony Towns": "卡尔-安东尼·唐斯",
+            "Anthony Davis": "安东尼·戴维斯",
+            "Nikola Jokic": "尼科拉·约基奇",
+            "Kevin Durant": "凯文·杜兰特",
+            "Shaquille O'Neal": "沙奎尔·奥尼尔",
+            "Karl Malone": "卡尔·马龙",
+            "Tim Duncan": "蒂姆·邓肯",
+            "Zion Williamson": "齐昂·威廉姆森",
+            "Russell Westbrook": "拉塞尔·威斯布鲁克",
+            "Michael Jordan": "迈克尔·乔丹",
+            "James Harden": "詹姆斯·哈登",
+            "Charles Barkley": "查尔斯·巴克利",
+            "DeMarcus Cousins": "德马库斯·考辛斯",
+            "Jayson Tatum": "杰森·塔图姆",
+            "Chris Webber": "克里斯·韦伯",
+            "Stephen Curry": "斯蒂芬·库里",
+            "Damian Lillard": "达米安·利拉德",
+            "Trae Young": "特雷·杨",
+            "Kobe Bryant": "科比·布莱恩特",
+            "Kevin Garnett": "凯文·加内特",
+            "Donovan Mitchell": "多诺万·米切尔",
+            "Allen Iverson": "艾伦·艾弗森",
+            "Ja Morant": "贾·莫兰特",
+            "Chris Bosh": "克里斯·波什",
+            "Dwight Howard": "德怀特·霍华德",
+            "Yao Ming": "姚明"
+        }
     </script>
 </body>
 
+<style>
+    #players {
+        width: 320px;
+        position: absolute;
+        top: 100px;
+        right: 40px;
+    }
+</style>
 </html>
