@@ -21,17 +21,24 @@
             var myChart1 = echarts.init(document.getElementById('chart1'), 'light');
             var name = [];
             var score = [];
-            var str = ''
+            var str_f = '';
+            var str_b = '';
             $.getJSON('/getRank', d => {
                 console.log(d)
                 var data = d.slice(0, 30)
                 for(let player of data) {
                     name.push(player.player_name);
                     score.push(player.score);
-                    str += player.player_name + `(${name_map[player.player_name]})` + '，'
+                    if(frontcourt_players.includes(player.player_name)) {
+                        str_f += player.player_name + `(${name_map[player.player_name]})` + '，'
+                    }else {
+                        str_b += player.player_name + `(${name_map[player.player_name]})` + '，'
+                    }
+                    
                 }
-                str = str.slice(0, str.length - 1);
-                $('#players').text(str)
+                str_f = str_f.slice(0, str_f.length - 1);
+                str_b = str_b.slice(0, str_b.length - 1);
+                $('#players').text('前场球员：' + str_f + '/n' + '后场球员：' + str_b)
                 myChart1.setOption(option);
             })
             // var dataAxis = d[1].map(v => v['season'] + ' ' + v['team_abbreviation']);
@@ -114,6 +121,41 @@
             "Dwight Howard": "德怀特·霍华德",
             "Yao Ming": "姚明"
         }
+        var frontcourt_players = [
+        'Karl-Anthony Towns',
+        'Anthony Davis',
+        "Shaquille O'Neal",
+        'Tim Duncan',
+        'Charles Barkley',
+        'DeMarcus Cousins',
+        'Kevin Garnett',
+        'Chris Bosh',
+        'Dwight Howard',
+        'Yao Ming'
+        ]
+
+        var backcourt_players = [
+            'Joel Embiid',
+            'Luka Doncic',
+            'LeBron James',
+            'Giannis Antetokounmpo',
+            'Nikola Jokic',
+            'Kevin Durant',
+            'Karl Malone',
+            'Zion Williamson',
+            'Russell Westbrook',
+            'Michael Jordan',
+            'James Harden',
+            'Jayson Tatum',
+            'Chris Webber',
+            'Stephen Curry',
+            'Damian Lillard',
+            'Trae Young',
+            'Kobe Bryant',
+            'Donovan Mitchell',
+            'Allen Iverson',
+            'Ja Morant'
+        ]
     </script>
 </body>
 
